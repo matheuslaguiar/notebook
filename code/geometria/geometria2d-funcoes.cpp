@@ -80,24 +80,24 @@ bool between(point p, point a, point b) {
  * (por ref) o ponto projecao de P na reta. */
 double distancePointLine(point p, point a, point b, point &c) {
   c = projectPointLine(p, a, b);
-  return fabs(cross(p - a, b - a)/abs(a - b); // or abs(p-c);
+  return fabs(cross(p - a, b - a)/abs(a - b)); // or abs(p-c);
 }
 
 /* Distancia de ponto P ao segmento [A,B]. Armazena em C (por ref) o
  * ponto de projecao de P em [A,B]. Se este ponto estiver fora do
  * segmento, eh retornado o mais proximo. */
 double distancePointSeg(point p, point a, point b, point &c) {
-  if ((b - a) * (p - a) <= 0) {
+  if (dot((b - a),(p - a)) <= 0) {
     c = a;
     return abs(a - p);
   }
-  if ((a - b) * (p - b) <= 0) {
+  if (dot((a - b),(p - b)) <= 0) {
     c = b;
     return abs(b - p);
   }
 
   c = projectPointLine(p, a, b);
-  return fabs(cross(p - a, b - a)/abs(a - b); // or abs(p-c);
+  return fabs(cross(p - a, b - a)/abs(a - b)); // or abs(p-c);
 }
 
 // Determina se os segmentos [A, B] e [C, D] se tocam
@@ -147,7 +147,16 @@ bool LinesCollinear(point a, point b, point c,
 //////////////////////////////////////////////////////////////////////
 
 bool pointInTriangle(point p, point a, point b, point c) {
-  // TODO
+	int s1,s2,s3;
+	s1 = ccw(a,b,p);
+	s2 = ccw(b,c,p);
+	s3 = ccw(c,a,p);
+	if(s1 == s2 && s2 == s3) // dentro 
+		return 1;
+	else if(s1*s2 == -1 || s1*s3 == -1 || s2*s3 == -1) // fora
+		return 0;
+	else // na borda
+		return 1;
 }
 
 // Heron's formula - area do triangulo(a,b,c) -1 se nao existe
@@ -269,4 +278,4 @@ int line_circ_inter(cxpt a, cxpt b, circle c, vector<cxpt> &inter) {
     inter.push_back(a + m - l * b);
   return inter.size();
 }
-//***[FIM] Funcoes que usam numeros complexos para pontos***
+//***[FIM] Funcoes que usam numeros complexos para pontos*** 
