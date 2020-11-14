@@ -80,24 +80,24 @@ bool between(point p, point a, point b) {
  * (por ref) o ponto projecao de P na reta. */
 double distancePointLine(point p, point a, point b, point &c) {
   c = projectPointLine(p, a, b);
-  return fabs(cross(p - a, b - a)/abs(a - b); // or abs(p-c);
+  return fabs(cross(p - a, b - a)/abs(a - b)); // or abs(p-c);
 }
 
 /* Distancia de ponto P ao segmento [A,B]. Armazena em C (por ref) o
  * ponto de projecao de P em [A,B]. Se este ponto estiver fora do
  * segmento, eh retornado o mais proximo. */
 double distancePointSeg(point p, point a, point b, point &c) {
-  if ((b - a) * (p - a) <= 0) {
+  if (dot((b - a),(p - a)) <= 0) {
     c = a;
     return abs(a - p);
   }
-  if ((a - b) * (p - b) <= 0) {
+  if (dot((a - b),(p - b)) <= 0) {
     c = b;
     return abs(b - p);
   }
 
   c = projectPointLine(p, a, b);
-  return fabs(cross(p - a, b - a)/abs(a - b); // or abs(p-c);
+  return fabs(cross(p - a, b - a)/abs(a - b)); // or abs(p-c);
 }
 
 // Determina se os segmentos [A, B] e [C, D] se tocam
@@ -147,7 +147,16 @@ bool LinesCollinear(point a, point b, point c,
 //////////////////////////////////////////////////////////////////////
 
 bool pointInTriangle(point p, point a, point b, point c) {
-  // TODO
+	int s1,s2,s3;
+	s1 = ccw(a,b,p);
+	s2 = ccw(b,c,p);
+	s3 = ccw(c,a,p);
+	if(s1 == s2 && s2 == s3) // dentro 
+		return 1;
+	else if(s1*s2 == -1 || s1*s3 == -1 || s2*s3 == -1) // fora
+		return 0;
+	else // na borda
+		return 1;
 }
 
 // Heron's formula - area do triangulo(a,b,c) -1 se nao existe
@@ -206,67 +215,3 @@ double distancePointPlane(double x, double y, double z, double a,
                           double b, double c, double d) {
   return fabs(a * x + b * y + c * z - d) / sqrt(a * a + b * b + c * c);
 }
-
-//***[Inicio] Funcoes que usam numeros complexos para pontos***
-typedef complex<double> cxpt;
-struct circle {
-  cxpt c;
-  double r;
-  circle(cxpt c, double r) : c(c), r(r) {}
-  circle() {}
-};
-double cross(const cxpt &a, const cxpt &b) {
-  return imag(conj(a) * b);
-}
-double dot(const cxpt &a, const cxpt &b) { return real(conj(a) * b); }
-
-// Area da interseccao de dois circulos
-double circ_inter_area(circle &a, circle &b) {
-  double d = abs(b.c - a.c);
-  if (d <= (b.r - a.r))
-    return a.r * a.r * M_PI;
-  if (d <= (a.r - b.r))
-    return b.r * b.r * M_PI;
-  if (d >= a.r + b.r)
-    return 0;
-  double A = acos((a.r * a.r + d * d - b.r * b.r) / (2 * a.r * d));
-  double B = acos((b.r * b.r + d * d - a.r * a.r) / (2 * b.r * d));
-  return a.r * a.r * (A - 0.5 * sin(2 * A)) +
-         b.r * b.r * (B - 0.5 * sin(2 * B));
-}
-
-// Pontos de interseccao de dois circulos
-// Intersects two circles and intersection points are in 'inter'
-// -1-> outside, 0-> inside, 1-> tangent, 2-> 2 intersections
-int circ_circ_inter(circle &a, circle &b, vector<cxpt> &inter) {
-  double d2 = norm(b.c - a.c), rS = a.r + b.r, rD = a.r - b.r;
-  if (d2 > rS * rS)
-    return -1;
-  if (d2 < rD * rD)
-    return 0;
-  double ca = 0.5 * (1 + rS * rD / d2);
-  cxpt z = cxpt(ca, sqrt((a.r * a.r / d2) - ca * ca));
-  inter.push_back(a.c + (b.c - a.c) * z);
-  if (abs(z.imag()) > EPS)
-    inter.push_back(a.c + (b.c - a.c) * conj(z));
-  return inter.size();
-}
-
-// Line-circle intersection
-// Intersects (infinite) line a-b with circle c
-// Intersection points are in 'inter'
-// 0 -> no intersection, 1 -> tangent, 2 -> two intersections
-int line_circ_inter(cxpt a, cxpt b, circle c, vector<cxpt> &inter) {
-  c.c -= a;
-  b -= a;
-  cxpt m = b * real(c.c / b);
-  double d2 = norm(m - c.c);
-  if (d2 > c.r * c.r)
-    return 0;
-  double l = sqrt((c.r * c.r - d2) / norm(b));
-  inter.push_back(a + m + l * b);
-  if (abs(l) > EPS)
-    inter.push_back(a + m - l * b);
-  return inter.size();
-}
-//***[FIM] Funcoes que usam numeros complexos para pontos***
